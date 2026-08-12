@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+coverage/
+.nyc_output/
+
+.prisma/
+*.log
+
+.vscode/
+.DS_Store
+
+docker-data/

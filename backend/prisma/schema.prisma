@@ -1,0 +1,43 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Report {
+  id                    Int      @id @default(autoincrement())
+  type                  String
+  name                  String
+  age                   Int?
+  location              String
+  latitude              Float?
+  longitude             Float?
+  description           String?
+  status                String   @default("desaparecido")
+  photoUrl              String?
+  dataPolicyAccepted    Boolean  @default(false)
+  dataPolicyAcceptedAt  DateTime?
+  isHidden              Boolean  @default(false)
+  hiddenAt              DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  removalRequests ReportRemovalRequest[]
+}
+
+model ReportRemovalRequest {
+  id        Int      @id @default(autoincrement())
+  reportId  Int
+  name      String
+  email     String
+  reason    String
+  status    String   @default("pendiente")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
