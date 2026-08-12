@@ -1,12 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import LocationPicker from "../../src/components/locationPicker";
+const LocationPicker = dynamic(
+  () => import("../../src/components/locationPicker"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[400px] items-center justify-center rounded-xl border border-slate-200 bg-slate-100">
+        <p className="text-sm text-slate-500">
+          Cargando mapa...
+        </p>
+      </div>
+    ),
+  },
+);
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function ReportarPage() {
   const router = useRouter();
@@ -21,7 +37,8 @@ export default function ReportarPage() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
-  const [dataPolicyAccepted, setDataPolicyAccepted] = useState(false);
+  const [dataPolicyAccepted, setDataPolicyAccepted] =
+    useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,13 +74,17 @@ export default function ReportarPage() {
 
     if (!file.type.startsWith("image/")) {
       setPhoto(null);
-      setError("El archivo seleccionado debe ser una imagen.");
+      setError(
+        "El archivo seleccionado debe ser una imagen.",
+      );
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
       setPhoto(null);
-      setError("La fotografía no puede superar los 5 MB.");
+      setError(
+        "La fotografía no puede superar los 5 MB.",
+      );
       return;
     }
 
@@ -91,12 +112,16 @@ export default function ReportarPage() {
     }
 
     if (trimmedName.length < 2) {
-      setError("El nombre debe tener al menos 2 caracteres.");
+      setError(
+        "El nombre debe tener al menos 2 caracteres.",
+      );
       return false;
     }
 
     if (!trimmedLocation) {
-      setError("La última ubicación conocida es obligatoria.");
+      setError(
+        "La última ubicación conocida es obligatoria.",
+      );
       return false;
     }
 
@@ -127,13 +152,15 @@ export default function ReportarPage() {
     }
 
     if (photo && photo.size > MAX_FILE_SIZE) {
-      setError("La fotografía no puede superar los 5 MB.");
+      setError(
+        "La fotografía no puede superar los 5 MB.",
+      );
       return false;
     }
 
     if (!dataPolicyAccepted) {
       setError(
-        "Debes aceptar la Política de Datos para enviar el reporte.",
+        "Debes aceptar la política de tratamiento de datos personales.",
       );
       return false;
     }
@@ -141,8 +168,11 @@ export default function ReportarPage() {
     return true;
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
+
     setError("");
 
     if (!validateForm()) {
@@ -157,16 +187,13 @@ export default function ReportarPage() {
       formData.append("type", type);
       formData.append("name", name.trim());
       formData.append("location", location.trim());
-      formData.append("description", description.trim());
+      formData.append(
+        "description",
+        description.trim(),
+      );
       formData.append("status", "desaparecido");
-
       formData.append("latitude", String(latitude));
       formData.append("longitude", String(longitude));
-
-      formData.append(
-        "dataPolicyAccepted",
-        String(dataPolicyAccepted),
-      );
 
       if (age) {
         formData.append("age", age);
@@ -177,7 +204,7 @@ export default function ReportarPage() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/reports`,
+        `${API_URL}/reports`,
         {
           method: "POST",
           body: formData,
@@ -185,7 +212,8 @@ export default function ReportarPage() {
       );
 
       if (!response.ok) {
-        let message = "No se pudo enviar el reporte.";
+        let message =
+          "No se pudo enviar el reporte.";
 
         try {
           const data = await response.json();
@@ -204,7 +232,10 @@ export default function ReportarPage() {
 
       router.push("/buscar");
     } catch (error) {
-      console.error("Error al crear el reporte:", error);
+      console.error(
+        "Error al crear el reporte:",
+        error,
+      );
 
       setError(
         error instanceof Error
@@ -220,29 +251,30 @@ export default function ReportarPage() {
     <main className="min-h-screen bg-slate-50 px-6 py-10">
       <div className="mx-auto max-w-2xl">
         {/* VOLVER */}
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          disabled={loading}
-          className="mb-8 inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+        <Link
+          href="/"
+          className="mb-8 inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-900"
         >
-          <span className="text-lg leading-none">←</span>
+          <span className="text-lg leading-none">
+            ←
+          </span>
           Volver al inicio
-        </button>
+        </Link>
 
         {/* ENCABEZADO */}
         <div className="mb-8">
-          <p className="text-sm font-bold uppercase tracking-wide text-red-600">
+          <p className="text-sm font-bold uppercase tracking-widest text-red-600">
             Cali Emergencia
           </p>
 
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
-            Reportar desaparecido
+          <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
+            Reportar desaparición
           </h1>
 
-          <p className="mt-3 max-w-xl text-slate-600">
-            Ayúdanos a encontrar a una persona o mascota proporcionando la
-            información más reciente que tengas.
+          <p className="mt-4 max-w-xl leading-7 text-slate-600">
+            Publica información sobre una persona o
+            mascota desaparecida para ayudar a facilitar
+            su búsqueda.
           </p>
         </div>
 
@@ -250,37 +282,41 @@ export default function ReportarPage() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="space-y-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
         >
           {/* TIPO */}
           <div>
             <label className="mb-3 block text-sm font-semibold text-slate-900">
-              ¿Qué desapareció?
+              ¿Qué deseas reportar?
             </label>
 
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => handleTypeChange("persona")}
+                onClick={() =>
+                  handleTypeChange("persona")
+                }
                 disabled={loading}
-                className={`rounded-xl border px-4 py-3 font-semibold transition ${
+                className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                   type === "persona"
                     ? "border-red-500 bg-red-50 text-red-700"
                     : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                } disabled:cursor-not-allowed disabled:opacity-60`}
+                } disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 Persona
               </button>
 
               <button
                 type="button"
-                onClick={() => handleTypeChange("mascota")}
+                onClick={() =>
+                  handleTypeChange("mascota")
+                }
                 disabled={loading}
-                className={`rounded-xl border px-4 py-3 font-semibold transition ${
+                className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                   type === "mascota"
                     ? "border-red-500 bg-red-50 text-red-700"
                     : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                } disabled:cursor-not-allowed disabled:opacity-60`}
+                } disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 Mascota
               </button>
@@ -293,16 +329,25 @@ export default function ReportarPage() {
               htmlFor="name"
               className="mb-2 block text-sm font-semibold text-slate-900"
             >
-              Nombre <span className="text-red-600">*</span>
+              {type === "persona"
+                ? "Nombre de la persona"
+                : "Nombre de la mascota"}{" "}
+              <span className="text-red-600">
+                *
+              </span>
             </label>
 
             <input
               id="name"
               type="text"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) =>
+                setName(event.target.value)
+              }
               placeholder={
-                type === "persona" ? "Ej. María González" : "Ej. Zeus"
+                type === "persona"
+                  ? "Ej. Juan Pérez"
+                  : "Ej. Max"
               }
               disabled={loading}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:bg-slate-100"
@@ -323,10 +368,15 @@ export default function ReportarPage() {
               type="number"
               min="0"
               max="150"
-              step="1"
               value={age}
-              onChange={(event) => setAge(event.target.value)}
-              placeholder={type === "persona" ? "Ej. 32" : "Ej. 3"}
+              onChange={(event) =>
+                setAge(event.target.value)
+              }
+              placeholder={
+                type === "persona"
+                  ? "Ej. 32"
+                  : "Ej. 3"
+              }
               disabled={loading}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:bg-slate-100"
             />
@@ -336,18 +386,22 @@ export default function ReportarPage() {
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-900">
               Última ubicación conocida{" "}
-              <span className="text-red-600">*</span>
+              <span className="text-red-600">
+                *
+              </span>
             </label>
 
             <p className="mb-3 text-sm text-slate-600">
-              Busca el barrio o zona donde la persona o mascota fue vista por
-              última vez.
+              Busca el barrio o zona donde la persona
+              o mascota fue vista por última vez.
             </p>
 
             <LocationPicker
               latitude={latitude}
               longitude={longitude}
-              onLocationChange={handleLocationChange}
+              onLocationChange={
+                handleLocationChange
+              }
             />
           </div>
 
@@ -363,7 +417,11 @@ export default function ReportarPage() {
             <textarea
               id="description"
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={(event) =>
+                setDescription(
+                  event.target.value,
+                )
+              }
               placeholder={
                 type === "persona"
                   ? "Ej. Cabello oscuro, estatura media. Vista por última vez cerca del parque."
@@ -390,14 +448,18 @@ export default function ReportarPage() {
               accept="image/*"
               disabled={loading}
               onChange={(event) => {
-                const file = event.target.files?.[0] ?? null;
+                const file =
+                  event.target.files?.[0] ??
+                  null;
+
                 handlePhotoChange(file);
               }}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800 disabled:bg-slate-100"
             />
 
             <p className="mt-2 text-xs text-slate-600">
-              Opcional. Solo imágenes de máximo 5 MB.
+              Opcional. Solo imágenes de máximo 5
+              MB.
             </p>
 
             {photo && (
@@ -414,7 +476,11 @@ export default function ReportarPage() {
                   </p>
 
                   <p className="ml-4 shrink-0 text-xs text-slate-500">
-                    {(photo.size / 1024 / 1024).toFixed(2)} MB
+                    {(
+                      photo.size /
+                      (1024 * 1024)
+                    ).toFixed(2)}{" "}
+                    MB
                   </p>
                 </div>
               </div>
@@ -428,24 +494,24 @@ export default function ReportarPage() {
                 type="checkbox"
                 checked={dataPolicyAccepted}
                 onChange={(event) =>
-                  setDataPolicyAccepted(event.target.checked)
+                  setDataPolicyAccepted(
+                    event.target.checked,
+                  )
                 }
                 disabled={loading}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
               />
 
-              <span className="text-sm leading-6 text-slate-600">
-                Confirmo que la información proporcionada es necesaria para
-                el propósito del reporte y acepto la{" "}
-                <Link
-                  href="/politica-datos"
-                  target="_blank"
-                  className="font-semibold text-red-600 underline underline-offset-2 transition hover:text-red-700"
-                >
-                  Política de Datos
-                </Link>
-                . Entiendo que parte de la información podrá ser visible
-                públicamente para facilitar la búsqueda.
+              <span className="text-sm leading-6 text-slate-700">
+                Declaro que la información
+                proporcionada es veraz y autorizo el
+                tratamiento de los datos suministrados
+                para los fines relacionados con la
+                búsqueda y gestión de este reporte.
+                <span className="text-red-600">
+                  {" "}
+                  *
+                </span>
               </span>
             </label>
           </div>
@@ -464,10 +530,19 @@ export default function ReportarPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-slate-900 px-5 py-3.5 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl bg-red-600 px-5 py-3.5 font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Enviando..." : "Reportar desaparecido"}
+            {loading
+              ? "Enviando reporte..."
+              : "Publicar reporte"}
           </button>
+
+          {/* INFORMACIÓN */}
+          <p className="text-center text-xs leading-5 text-slate-500">
+            La información será utilizada únicamente
+            para facilitar la búsqueda y atención del
+            reporte.
+          </p>
         </form>
       </div>
     </main>

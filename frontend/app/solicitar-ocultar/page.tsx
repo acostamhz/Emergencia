@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-const API_URL = "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export default function SolicitarOcultarPage() {
+function SolicitarOcultarForm() {
   const searchParams = useSearchParams();
 
   const initialReportId = searchParams.get("reporte") ?? "";
@@ -132,7 +132,6 @@ export default function SolicitarOcultarPage() {
           noValidate
           className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
         >
-          {/* REPORTE */}
           <div>
             <label
               htmlFor="reportId"
@@ -158,7 +157,6 @@ export default function SolicitarOcultarPage() {
             </p>
           </div>
 
-          {/* NOMBRE */}
           <div>
             <label
               htmlFor="name"
@@ -178,7 +176,6 @@ export default function SolicitarOcultarPage() {
             />
           </div>
 
-          {/* CORREO */}
           <div>
             <label
               htmlFor="email"
@@ -198,7 +195,6 @@ export default function SolicitarOcultarPage() {
             />
           </div>
 
-          {/* MOTIVO */}
           <div>
             <label
               htmlFor="reason"
@@ -218,7 +214,6 @@ export default function SolicitarOcultarPage() {
             />
           </div>
 
-          {/* AVISO */}
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm leading-6 text-amber-900">
               <strong>Importante:</strong> enviar esta solicitud no
@@ -227,7 +222,6 @@ export default function SolicitarOcultarPage() {
             </p>
           </div>
 
-          {/* ERROR */}
           {error && (
             <div
               role="alert"
@@ -237,7 +231,6 @@ export default function SolicitarOcultarPage() {
             </div>
           )}
 
-          {/* ÉXITO */}
           {success && (
             <div
               role="status"
@@ -247,7 +240,6 @@ export default function SolicitarOcultarPage() {
             </div>
           )}
 
-          {/* BOTÓN */}
           <button
             type="submit"
             disabled={loading}
@@ -260,5 +252,23 @@ export default function SolicitarOcultarPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function SolicitarOcultarPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 px-6 py-10">
+          <div className="mx-auto max-w-2xl">
+            <p className="text-sm text-slate-600">
+              Cargando...
+            </p>
+          </div>
+        </main>
+      }
+    >
+      <SolicitarOcultarForm />
+    </Suspense>
   );
 }
