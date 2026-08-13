@@ -26,6 +26,7 @@ export default function BuscarPage() {
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("Todos");
+  const [statusFilter, setStatusFilter] = useState("Todos");
   const [locationFilter, setLocationFilter] =
     useState("Todas las zonas");
 
@@ -118,6 +119,13 @@ export default function BuscarPage() {
           (typeFilter === "Mascotas" &&
             report.type === "mascota");
 
+        const matchesStatus =
+          statusFilter === "Todos" ||
+          (statusFilter === "Desaparecidos" &&
+            report.status === "desaparecido") ||
+          (statusFilter === "Encontrados" &&
+            report.status === "encontrado");
+
         const matchesLocation =
           locationFilter === "Todas las zonas" ||
           report.location === locationFilter;
@@ -125,19 +133,28 @@ export default function BuscarPage() {
         return (
           matchesSearch &&
           matchesType &&
+          matchesStatus &&
           matchesLocation
         );
       });
-  }, [reports, search, typeFilter, locationFilter]);
+  }, [
+    reports,
+    search,
+    typeFilter,
+    statusFilter,
+    locationFilter,
+  ]);
 
   const hasActiveFilters =
     search.trim() !== "" ||
     typeFilter !== "Todos" ||
+    statusFilter !== "Todos" ||
     locationFilter !== "Todas las zonas";
 
   function clearFilters() {
     setSearch("");
     setTypeFilter("Todos");
+    setStatusFilter("Todos");
     setLocationFilter("Todas las zonas");
   }
 
@@ -187,18 +204,19 @@ export default function BuscarPage() {
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-            Buscar desaparecidos
+            Buscar reportes
           </h1>
 
           <p className="mt-3 text-slate-700">
             Busca información sobre personas y mascotas
-            reportadas como desaparecidas.
+            reportadas como desaparecidas o encontradas.
           </p>
         </div>
 
         {/* FILTROS */}
         <div className="mb-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* BÚSQUEDA */}
             <input
               type="text"
               value={search}
@@ -209,6 +227,7 @@ export default function BuscarPage() {
               className="rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
             />
 
+            {/* TIPO */}
             <select
               value={typeFilter}
               onChange={(event) =>
@@ -221,6 +240,20 @@ export default function BuscarPage() {
               <option>Mascotas</option>
             </select>
 
+            {/* ESTADO */}
+            <select
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(event.target.value)
+              }
+              className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+            >
+              <option>Todos</option>
+              <option>Desaparecidos</option>
+              <option>Encontrados</option>
+            </select>
+
+            {/* ZONA */}
             <select
               value={locationFilter}
               onChange={(event) =>
@@ -238,6 +271,7 @@ export default function BuscarPage() {
             </select>
           </div>
 
+          {/* LIMPIAR FILTROS */}
           {hasActiveFilters && (
             <div className="mt-4 flex justify-end">
               <button
@@ -344,10 +378,12 @@ export default function BuscarPage() {
                   {/* INFORMACIÓN */}
                   <div className="p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">
+                      {/* TIPO */}
                       <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
                         {getTypeLabel(report.type)}
                       </span>
 
+                      {/* ESTADO */}
                       <span
                         className={
                           isFound
