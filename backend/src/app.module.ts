@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ReportsModule } from './reports/reports.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { CloudinaryService } from './cloudinary.service';
 
 @Module({
   imports: [
@@ -17,7 +18,14 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     ReportsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+
+  controllers: [
+    AppController,
+  ],
+
+  providers: [
+    AppService,
+    CloudinaryService,
+  ],
 })
 export class AppModule {}

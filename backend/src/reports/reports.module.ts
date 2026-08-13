@@ -1,9 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ReportsService } from './reports.service';
+
 import { ReportsController } from './reports.controller';
+import { ReportsService } from './reports.service';
+import { CloudinaryModule } from '../cloudinary.module';
 
 @Module({
-  controllers: [ReportsController],
-  providers: [ReportsService],
+  imports: [
+    CloudinaryModule,
+  ],
+
+  controllers: [
+    ReportsController,
+  ],
+
+  providers: [
+    ReportsService,
+  ],
 })
 export class ReportsModule {}

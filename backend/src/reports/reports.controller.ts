@@ -14,9 +14,11 @@ import {
 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
+import { unlink } from 'fs/promises';
 
 import { ReportsService } from './reports.service';
+import { CloudinaryService } from '../cloudinary.service';
 
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
@@ -26,6 +28,7 @@ import { CreateRemovalRequestDto } from './dto/create-removal-request.dto';
 export class ReportsController {
   constructor(
     private readonly reportsService: ReportsService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   @Post()
@@ -72,7 +75,7 @@ export class ReportsController {
       },
     }),
   )
-  create(
+  async create(
     @Body() createReportDto: CreateReportDto,
     @UploadedFile() photo: Express.Multer.File,
   ) {
@@ -87,9 +90,58 @@ export class ReportsController {
     );
 
     console.log(
-      'Fotografía guardada como:',
+      'Fotografía guardada temporalmente:',
       photo?.filename,
     );
+
+    let photoUrl: string | undefined;
+
+    if (photo) {
+      const temporaryPath = join(
+        process.cwd(),
+        'uploads',
+        photo.filename,
+      );
+
+      try {
+        console.log(
+          'Subiendo fotografía a Cloudinary...',
+        );
+
+        photoUrl =
+          await this.cloudinaryService.uploadImage(
+            temporaryPath,
+          );
+
+        console.log(
+          'Fotografía subida correctamente:',
+          photoUrl,
+        );
+      } catch (error) {
+        console.error(
+          'Error subiendo fotografía a Cloudinary:',
+          error,
+        );
+
+        throw new BadRequestException(
+          'No se pudo almacenar la fotografía. Intenta nuevamente.',
+        );
+      } finally {
+        try {
+          await unlink(temporaryPath);
+
+          console.log(
+            'Archivo temporal eliminado:',
+            photo.filename,
+          );
+        } catch (error) {
+          console.error(
+            'No se pudo eliminar el archivo temporal:',
+            error,
+          );
+        }
+      }
+    }
 
     const reportData = {
       ...createReportDto,
@@ -109,9 +161,7 @@ export class ReportsController {
           ? Number(createReportDto.longitude)
           : undefined,
 
-      photoUrl: photo
-        ? `/uploads/${photo.filename}`
-        : undefined,
+      photoUrl,
     };
 
     return this.reportsService.create(
@@ -146,7 +196,6 @@ export class ReportsController {
   update(
     @Param('id', ParseIntPipe)
     id: number,
-
     @Body()
     updateReportDto: UpdateReportDto,
   ) {
