@@ -8,14 +8,14 @@ import {
   IsString,
   Max,
   Min,
-} from 'class-validator';
+} from "class-validator";
 
-import { Type } from 'class-transformer';
+import { Transform, Type } from "class-transformer";
 
 export class CreateReportDto {
   @IsString()
   @IsNotEmpty()
-  @IsIn(['persona', 'mascota'])
+  @IsIn(["persona", "mascota"])
   type!: string;
 
   @IsString()
@@ -53,14 +53,24 @@ export class CreateReportDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['desaparecido', 'encontrado'])
+  @IsIn(["desaparecido", "encontrado"])
   status?: string;
 
   @IsOptional()
   @IsString()
   photoUrl?: string;
 
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === "true" || value === true) {
+      return true;
+    }
+
+    if (value === "false" || value === false) {
+      return false;
+    }
+
+    return value;
+  })
   @IsBoolean()
   dataPolicyAccepted!: boolean;
 }

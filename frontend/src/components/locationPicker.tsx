@@ -59,6 +59,61 @@ function MapCenter({
   return null;
 }
 
+async function reverseGeocode(
+  latitude: number,
+  longitude: number,
+): Promise<string> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+    );
+
+    if (!response.ok) {
+      throw new Error("No se pudo obtener la ubicación.");
+    }
+
+    const data = await response.json();
+
+    const address = data?.address;
+
+    if (address) {
+      const neighborhood =
+        address.neighbourhood ||
+        address.suburb ||
+        address.quarter ||
+        address.city_district ||
+        "";
+
+      const city =
+        address.city ||
+        address.town ||
+        address.municipality ||
+        "";
+
+      if (neighborhood && city) {
+        return `${neighborhood}, ${city}`;
+      }
+
+      if (neighborhood) {
+        return neighborhood;
+      }
+
+      if (data?.display_name) {
+        return data.display_name;
+      }
+    }
+
+    return (
+      data?.display_name ||
+      `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+    );
+  } catch (error) {
+    console.error("Error en geocodificación inversa:", error);
+
+    return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+  }
+}
+
 function DraggableMarker({
   latitude,
   longitude,
@@ -82,10 +137,15 @@ function DraggableMarker({
           const marker = event.target as L.Marker;
           const position = marker.getLatLng();
 
+          const locationName = await reverseGeocode(
+            position.lat,
+            position.lng,
+          );
+
           onLocationChange(
             position.lat,
             position.lng,
-            `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`,
+            locationName,
           );
         },
       }}
@@ -114,32 +174,80 @@ export default function LocationPicker({
 
     if (!trimmedQuery) {
       setResults([]);
+      setSearchError("");
       return;
     }
 
     setSearching(true);
     setSearchError("");
+    setResults([]);
 
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=co&q=${encodeURIComponent(
-          `${trimmedQuery}, Cali, Colombia`,
-        )}`,
-      );
+      /*
+       * Hacemos varias búsquedas progresivas.
+       *
+       * Algunos barrios aparecen en Nominatim como:
+       * - Barrio X
+       * - X
+       * - X, Cali
+       *
+       * Por eso no dependemos de una única consulta.
+       */
 
-      if (!response.ok) {
-        throw new Error("No se pudo buscar la ubicación.");
+      const queries = [
+        `${trimmedQuery}, Cali, Colombia`,
+        `${trimmedQuery}, Cali`,
+        `${trimmedQuery}, Valle del Cauca, Colombia`,
+        `${trimmedQuery}, Colombia`,
+      ];
+
+      const uniqueResults = new Map<string, LocationResult>();
+
+      for (const searchQuery of queries) {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=co&addressdetails=1&q=${encodeURIComponent(
+            searchQuery,
+          )}`,
+        );
+
+        if (!response.ok) {
+          continue;
+        }
+
+        const data: LocationResult[] = await response.json();
+
+        for (const result of data) {
+          const key = `${result.lat}-${result.lon}`;
+
+          if (!uniqueResults.has(key)) {
+            uniqueResults.set(key, result);
+          }
+        }
+
+        /*
+         * Si ya encontramos resultados, no necesitamos
+         * seguir haciendo consultas.
+         */
+        if (uniqueResults.size >= 5) {
+          break;
+        }
       }
 
-      const data: LocationResult[] = await response.json();
+      const finalResults = Array.from(uniqueResults.values()).slice(
+        0,
+        5,
+      );
 
-      setResults(data);
+      setResults(finalResults);
 
-      if (data.length === 0) {
-        setSearchError("No encontramos esa ubicación.");
+      if (finalResults.length === 0) {
+        setSearchError(
+          "No encontramos esa ubicación. Intenta escribir solo el nombre del barrio o zona.",
+        );
       }
     } catch (error) {
       console.error("Error buscando ubicación:", error);
+
       setSearchError(
         "No se pudo buscar la ubicación. Intenta nuevamente.",
       );
@@ -177,7 +285,8 @@ export default function LocationPicker({
             }
           }}
           placeholder="Ej. Capri, San Fernando, El Lido..."
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+          disabled={searching}
+          className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:bg-slate-100"
         />
 
         <button
@@ -257,8 +366,8 @@ export default function LocationPicker({
         </div>
       ) : (
         <p className="text-xs text-slate-500">
-          Busca el barrio o zona donde la persona o mascota fue vista por
-          última vez y selecciona una ubicación.
+          Busca el barrio o zona donde la persona o mascota fue
+          vista por última vez y selecciona una ubicación.
         </p>
       )}
     </div>

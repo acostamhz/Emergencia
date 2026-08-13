@@ -194,6 +194,11 @@ export default function ReportarPage() {
       formData.append("status", "desaparecido");
       formData.append("latitude", String(latitude));
       formData.append("longitude", String(longitude));
+      
+      formData.append(
+        "dataPolicyAccepted",
+        String(dataPolicyAccepted)
+      );
 
       if (age) {
         formData.append("age", age);
