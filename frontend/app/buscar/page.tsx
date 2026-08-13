@@ -185,95 +185,103 @@ export default function BuscarPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-6xl px-6 py-10">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50">
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         {/* NAVEGACIÓN */}
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="mb-8 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-900"
+          className="mb-8 inline-flex max-w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-900"
         >
-          <span className="text-lg">←</span>
-          Volver al inicio
+          <span className="shrink-0 text-lg">←</span>
+          <span>Volver al inicio</span>
         </button>
 
         {/* ENCABEZADO */}
-        <div className="mb-10">
+        <div className="mb-8 sm:mb-10">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-red-600">
             Cali Emergencia
           </p>
 
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Buscar reportes
           </h1>
 
-          <p className="mt-3 text-slate-700">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-700 sm:text-base">
             Busca información sobre personas y mascotas
             reportadas como desaparecidas o encontradas.
           </p>
         </div>
 
         {/* FILTROS */}
-        <div className="mb-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-10 sm:p-5">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
             {/* BÚSQUEDA */}
-            <input
-              type="text"
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              placeholder="Nombre, descripción o ubicación..."
-              className="rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
-            />
+            <div className="min-w-0">
+              <input
+                type="text"
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Nombre, descripción o ubicación..."
+                className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              />
+            </div>
 
             {/* TIPO */}
-            <select
-              value={typeFilter}
-              onChange={(event) =>
-                setTypeFilter(event.target.value)
-              }
-              className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
-            >
-              <option>Todos</option>
-              <option>Personas</option>
-              <option>Mascotas</option>
-            </select>
+            <div className="min-w-0">
+              <select
+                value={typeFilter}
+                onChange={(event) =>
+                  setTypeFilter(event.target.value)
+                }
+                className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              >
+                <option>Todos</option>
+                <option>Personas</option>
+                <option>Mascotas</option>
+              </select>
+            </div>
 
             {/* ESTADO */}
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value)
-              }
-              className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
-            >
-              <option>Todos</option>
-              <option>Desaparecidos</option>
-              <option>Encontrados</option>
-            </select>
+            <div className="min-w-0">
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value)
+                }
+                className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              >
+                <option>Todos</option>
+                <option>Desaparecidos</option>
+                <option>Encontrados</option>
+              </select>
+            </div>
 
             {/* ZONA */}
-            <select
-              value={locationFilter}
-              onChange={(event) =>
-                setLocationFilter(event.target.value)
-              }
-              className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
-            >
-              <option>Todas las zonas</option>
+            <div className="min-w-0">
+              <select
+                value={locationFilter}
+                onChange={(event) =>
+                  setLocationFilter(event.target.value)
+                }
+                className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              >
+                <option>Todas las zonas</option>
 
-              {locations.map((location) => (
-                <option key={location} value={location}>
-                  {location}
-                </option>
-              ))}
-            </select>
+                {locations.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* LIMPIAR FILTROS */}
           {hasActiveFilters && (
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-start sm:justify-end">
               <button
                 type="button"
                 onClick={clearFilters}
@@ -286,12 +294,12 @@ export default function BuscarPage() {
         </div>
 
         {/* RESULTADOS */}
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+        <div className="mb-5 flex min-w-0 items-center justify-between gap-4 sm:mb-6">
+          <h2 className="min-w-0 text-lg font-semibold text-slate-900">
             Reportes recientes
           </h2>
 
-          <span className="text-sm font-medium text-slate-600">
+          <span className="shrink-0 text-sm font-medium text-slate-600">
             {filteredReports.length}{" "}
             {filteredReports.length === 1
               ? "reporte"
@@ -301,7 +309,7 @@ export default function BuscarPage() {
 
         {/* ERROR */}
         {fetchError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center sm:p-8">
             <p className="font-semibold text-red-800">
               No se pudieron cargar los reportes.
             </p>
@@ -320,14 +328,14 @@ export default function BuscarPage() {
           </div>
         ) : loading ? (
           /* LOADING */
-          <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center sm:p-10">
             <p className="text-slate-700">
               Cargando reportes...
             </p>
           </div>
         ) : filteredReports.length === 0 ? (
           /* SIN RESULTADOS */
-          <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center sm:p-10">
             <p className="font-medium text-slate-900">
               No se encontraron reportes.
             </p>
@@ -350,7 +358,7 @@ export default function BuscarPage() {
           </div>
         ) : (
           /* RESULTADOS */
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {filteredReports.map((report) => {
               const isFound =
                 report.status === "encontrado";
@@ -358,10 +366,10 @@ export default function BuscarPage() {
               return (
                 <article
                   key={report.id}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                  className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >
                   {/* FOTO */}
-                  <div className="flex h-56 items-center justify-center overflow-hidden bg-slate-200">
+                  <div className="flex h-56 w-full items-center justify-center overflow-hidden bg-slate-200">
                     {report.photoUrl ? (
                       <img
                         src={`${API_URL}${report.photoUrl}`}
@@ -369,17 +377,17 @@ export default function BuscarPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <span className="text-sm text-slate-600">
+                      <span className="px-4 text-center text-sm text-slate-600">
                         Fotografía no disponible
                       </span>
                     )}
                   </div>
 
                   {/* INFORMACIÓN */}
-                  <div className="p-5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0 p-4 sm:p-5">
+                    <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
                       {/* TIPO */}
-                      <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                      <span className="shrink-0 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
                         {getTypeLabel(report.type)}
                       </span>
 
@@ -387,26 +395,26 @@ export default function BuscarPage() {
                       <span
                         className={
                           isFound
-                            ? "text-xs font-semibold text-green-600"
-                            : "text-xs font-semibold text-red-600"
+                            ? "min-w-0 truncate text-right text-xs font-semibold text-green-600"
+                            : "min-w-0 truncate text-right text-xs font-semibold text-red-600"
                         }
                       >
                         {getStatusLabel(report.status)}
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-slate-900">
+                    <h3 className="break-words text-xl font-bold text-slate-900">
                       {report.name}
                     </h3>
 
-                    <p className="mt-1 text-sm font-medium text-slate-600">
+                    <p className="mt-1 break-words text-sm font-medium text-slate-600">
                       {report.age !== undefined &&
                         `${report.age} años · `}
                       {report.location}
                     </p>
 
                     {report.description && (
-                      <p className="mt-3 line-clamp-2 text-sm text-slate-600">
+                      <p className="mt-3 line-clamp-2 break-words text-sm text-slate-600">
                         {report.description}
                       </p>
                     )}
