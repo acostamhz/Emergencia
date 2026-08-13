@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import Navbar from "../src/components/layout/navbar";
+
 type Report = {
   id: number;
   type: string;
@@ -19,32 +21,46 @@ export default function Home() {
   useEffect(() => {
     async function loadStatistics() {
       try {
-        const response = await fetch(`${API_URL}/reports`);
+        const response = await fetch(
+          `${API_URL}/reports`,
+        );
 
         if (!response.ok) {
-          throw new Error("No se pudieron obtener los reportes.");
+          throw new Error(
+            "No se pudieron obtener los reportes.",
+          );
         }
 
-        const data: Report[] = await response.json();
+        const data: Report[] =
+          await response.json();
 
         if (!Array.isArray(data)) {
-          throw new Error("La respuesta del servidor no es válida.");
+          throw new Error(
+            "La respuesta del servidor no es válida.",
+          );
         }
 
         const people = data.filter(
-          (report) => report.type === "persona",
+          (report) =>
+            report.type === "persona",
         );
 
         const missing = people.filter(
-          (report) => report.status === "desaparecido",
+          (report) =>
+            report.status ===
+            "desaparecido",
         );
 
         const found = people.filter(
-          (report) => report.status === "encontrado",
+          (report) =>
+            report.status ===
+            "encontrado",
         );
 
         setTotalReports(people.length);
-        setMissingReports(missing.length);
+        setMissingReports(
+          missing.length,
+        );
         setFoundReports(found.length);
       } catch (error) {
         console.error(
@@ -58,25 +74,40 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main
+      id="inicio"
+      className="min-h-screen bg-slate-50"
+    >
+      {/* NAVBAR */}
+
+      <Navbar />
+
       {/* HERO */}
-      <section className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
+
+      <section
+        id="inicio"
+        className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16 pt-32"
+      >
         <div className="mb-10 max-w-3xl">
           <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-red-600">
             Cali Emergencia
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
-            Ayudemos a encontrar a quienes están desaparecidos.
+            Ayudemos a encontrar a
+            quienes están desaparecidos.
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            Una plataforma para reportar y buscar personas y mascotas
-            desaparecidas durante una emergencia.
+            Una plataforma para reportar y
+            buscar personas y mascotas
+            desaparecidas durante una
+            emergencia.
           </p>
         </div>
 
         {/* ACCIONES PRINCIPALES */}
+
         <div className="grid gap-4 sm:grid-cols-3">
           <Link
             href="/buscar"
@@ -101,15 +132,19 @@ export default function Home() {
         </div>
 
         {/* AVISO */}
+
         <div className="mt-16 rounded-xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-sm leading-6 text-amber-900">
-            <strong>Importante:</strong> comparte únicamente información
-            necesaria y evita publicar datos personales sensibles.
+            <strong>Importante:</strong>{" "}
+            comparte únicamente información
+            necesaria y evita publicar datos
+            personales sensibles.
           </p>
         </div>
       </section>
 
       {/* ESTADÍSTICAS */}
+
       <section className="border-y border-slate-200 bg-white px-6 py-12">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-5 md:grid-cols-3">
@@ -118,7 +153,9 @@ export default function Home() {
               className="rounded-2xl border border-amber-200 bg-white p-8 text-center transition hover:-translate-y-1 hover:shadow-md"
             >
               <p className="text-4xl font-bold text-amber-700">
-                {totalReports.toLocaleString("es-CO")}
+                {totalReports.toLocaleString(
+                  "es-CO",
+                )}
               </p>
 
               <p className="mt-2 text-lg font-semibold text-amber-800">
@@ -131,7 +168,9 @@ export default function Home() {
               className="rounded-2xl border border-red-200 bg-white p-8 text-center transition hover:-translate-y-1 hover:shadow-md"
             >
               <p className="text-4xl font-bold text-red-700">
-                {missingReports.toLocaleString("es-CO")}
+                {missingReports.toLocaleString(
+                  "es-CO",
+                )}
               </p>
 
               <p className="mt-2 text-lg font-semibold text-red-700">
@@ -144,7 +183,9 @@ export default function Home() {
               className="rounded-2xl border border-emerald-200 bg-white p-8 text-center transition hover:-translate-y-1 hover:shadow-md"
             >
               <p className="text-4xl font-bold text-emerald-700">
-                {foundReports.toLocaleString("es-CO")}
+                {foundReports.toLocaleString(
+                  "es-CO",
+                )}
               </p>
 
               <p className="mt-2 text-lg font-semibold text-emerald-700">
@@ -156,6 +197,7 @@ export default function Home() {
       </section>
 
       {/* TELÉFONOS DE EMERGENCIA */}
+
       <section className="px-6 py-12">
         <div className="mx-auto max-w-6xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="mb-5 text-sm font-bold uppercase tracking-wider text-red-600">
@@ -192,6 +234,7 @@ export default function Home() {
       </section>
 
       {/* PREGUNTAS FRECUENTES */}
+
       <section className="border-t border-slate-200 bg-white px-6 py-16">
         <div className="mx-auto max-w-4xl">
           <div className="mb-10 text-center">
@@ -234,6 +277,7 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
+
       <footer className="bg-slate-900 px-6 py-14 text-slate-300">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
@@ -247,14 +291,17 @@ export default function Home() {
               </h2>
 
               <p className="mt-4 max-w-xl text-sm leading-6 text-slate-400">
-                Esta plataforma es ciudadana, voluntaria, de código libre y
-                sin fines de lucro. No reemplaza a las autoridades ni
-                organismos de emergencia. Verifica siempre la información
-                antes de difundirla.
+                Esta plataforma es ciudadana,
+                voluntaria, de código libre y sin
+                fines de lucro. No reemplaza a las
+                autoridades ni organismos de
+                emergencia. Verifica siempre la
+                información antes de difundirla.
               </p>
 
               <p className="mt-4 text-sm leading-6 text-slate-400">
-                ¿Encontraste un problema técnico en el sitio? Escríbenos a{" "}
+                ¿Encontraste un problema técnico
+                en el sitio? Escríbenos a{" "}
                 <a
                   href="mailto:acostadevice@gmail.com"
                   className="font-semibold text-white hover:text-red-400"
@@ -333,8 +380,8 @@ export default function Home() {
           </div>
 
           <div className="mt-12 border-t border-slate-800 pt-6 text-sm text-slate-500">
-            © {new Date().getFullYear()} Cali Emergencia. Plataforma
-            ciudadana de apoyo.
+            © {new Date().getFullYear()} Cali Emergencia.
+            Plataforma ciudadana de apoyo.
           </div>
         </div>
       </footer>
