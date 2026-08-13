@@ -77,7 +77,8 @@ export class ReportsController {
   )
   async create(
     @Body() createReportDto: CreateReportDto,
-    @UploadedFile() photo: Express.Multer.File,
+    @UploadedFile()
+    photo: Express.Multer.File,
   ) {
     console.log(
       'Datos recibidos:',
@@ -193,15 +194,197 @@ export class ReportsController {
   }
 
   @Patch(':id')
-  update(
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      storage: diskStorage({
+        destination: './uploads',
+
+        filename: (_request, file, callback) => {
+          const extension = extname(
+            file.originalname,
+          ).toLowerCase();
+
+          const uniqueName = `${Date.now()}-${Math.round(
+            Math.random() * 1e9,
+          )}${extension}`;
+
+          callback(null, uniqueName);
+        },
+      }),
+
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+
+      fileFilter: (_request, file, callback) => {
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/png',
+          'image/webp',
+          'image/gif',
+        ];
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException(
+              'La fotografía debe ser JPG, PNG, WEBP o GIF.',
+            ),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
+  async update(
     @Param('id', ParseIntPipe)
     id: number,
+
     @Body()
     updateReportDto: UpdateReportDto,
+
+    @UploadedFile()
+    photo: Express.Multer.File,
   ) {
+    const existingReport =
+      await this.reportsService.findOne(id);
+
+    let photoUrl:
+      | string
+      | null
+      | undefined;
+
+    /*
+     * Si llega una fotografía nueva:
+     *
+     * 1. La subimos primero.
+     * 2. Si Cloudinary funciona, eliminamos la anterior.
+     * 3. Guardamos la nueva URL.
+     */
+    if (photo) {
+      const temporaryPath = join(
+        process.cwd(),
+        'uploads',
+        photo.filename,
+      );
+
+      try {
+        console.log(
+          'Nueva fotografía recibida:',
+          photo.originalname,
+        );
+
+        console.log(
+          'Subiendo nueva fotografía a Cloudinary...',
+        );
+
+        photoUrl =
+          await this.cloudinaryService.uploadImage(
+            temporaryPath,
+          );
+
+        console.log(
+          'Nueva fotografía subida:',
+          photoUrl,
+        );
+
+        if (existingReport.photoUrl) {
+          await this.cloudinaryService.deleteImage(
+            existingReport.photoUrl,
+          );
+        }
+      } catch (error) {
+        console.error(
+          'Error procesando nueva fotografía:',
+          error,
+        );
+
+        throw new BadRequestException(
+          'No se pudo actualizar la fotografía. Intenta nuevamente.',
+        );
+      } finally {
+        try {
+          await unlink(temporaryPath);
+
+          console.log(
+            'Archivo temporal eliminado:',
+            photo.filename,
+          );
+        } catch (error) {
+          console.error(
+            'No se pudo eliminar el archivo temporal:',
+            error,
+          );
+        }
+      }
+    }
+
+    /*
+     * deletePhoto llega como string cuando usamos
+     * multipart/form-data.
+     */
+    const deletePhoto =
+      String(
+        (updateReportDto as any).deletePhoto ??
+          '',
+      ).toLowerCase() === 'true';
+
+    /*
+     * Si el usuario pidió eliminar la fotografía
+     * y no está subiendo una nueva:
+     */
+    if (
+      deletePhoto &&
+      !photo &&
+      existingReport.photoUrl
+    ) {
+      await this.cloudinaryService.deleteImage(
+        existingReport.photoUrl,
+      );
+
+      photoUrl = null;
+    }
+
+    /*
+     * No enviamos deletePhoto a Prisma porque
+     * ese campo no existe en Report.
+     */
+    const {
+      deletePhoto: _deletePhoto,
+      ...reportData
+    } = updateReportDto as UpdateReportDto & {
+      deletePhoto?: string | boolean;
+    };
+
+    const finalData = {
+      ...reportData,
+
+      age:
+        reportData.age !== undefined
+          ? Number(reportData.age)
+          : undefined,
+
+      latitude:
+        reportData.latitude !== undefined
+          ? Number(reportData.latitude)
+          : undefined,
+
+      longitude:
+        reportData.longitude !== undefined
+          ? Number(reportData.longitude)
+          : undefined,
+
+      ...(photoUrl !== undefined
+        ? { photoUrl }
+        : {}),
+    };
+
     return this.reportsService.update(
       id,
-      updateReportDto,
+      finalData as UpdateReportDto & {
+      photoUrl?: string | null;
+      },
     );
   }
 

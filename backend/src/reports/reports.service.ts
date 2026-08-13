@@ -3,20 +3,23 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { unlink } from 'fs/promises';
-import { join } from 'path';
-
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { CreateRemovalRequestDto } from './dto/create-removal-request.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { CloudinaryService } from '../cloudinary.service';
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
-  async create(createReportDto: CreateReportDto) {
+  async create(
+    createReportDto: CreateReportDto,
+  ) {
     return this.prisma.report.create({
       data: createReportDto,
     });
@@ -34,11 +37,12 @@ export class ReportsService {
   }
 
   async findOne(id: number) {
-    const report = await this.prisma.report.findUnique({
-      where: {
-        id,
-      },
-    });
+    const report =
+      await this.prisma.report.findUnique({
+        where: {
+          id,
+        },
+      });
 
     if (!report) {
       throw new NotFoundException(
@@ -53,11 +57,12 @@ export class ReportsService {
     id: number,
     updateReportDto: UpdateReportDto,
   ) {
-    const report = await this.prisma.report.findUnique({
-      where: {
-        id,
-      },
-    });
+    const report =
+      await this.prisma.report.findUnique({
+        where: {
+          id,
+        },
+      });
 
     if (!report) {
       throw new NotFoundException(
@@ -76,11 +81,12 @@ export class ReportsService {
   async createRemovalRequest(
     data: CreateRemovalRequestDto,
   ) {
-    const report = await this.prisma.report.findUnique({
-      where: {
-        id: data.reportId,
-      },
-    });
+    const report =
+      await this.prisma.report.findUnique({
+        where: {
+          id: data.reportId,
+        },
+      });
 
     if (!report) {
       throw new NotFoundException(
@@ -99,11 +105,12 @@ export class ReportsService {
   }
 
   async remove(id: number) {
-    const report = await this.prisma.report.findUnique({
-      where: {
-        id,
-      },
-    });
+    const report =
+      await this.prisma.report.findUnique({
+        where: {
+          id,
+        },
+      });
 
     if (!report) {
       throw new NotFoundException(
@@ -111,36 +118,17 @@ export class ReportsService {
       );
     }
 
-    const deletedReport = await this.prisma.report.delete({
-      where: {
-        id,
-      },
-    });
+    const deletedReport =
+      await this.prisma.report.delete({
+        where: {
+          id,
+        },
+      });
 
     if (report.photoUrl) {
-      const filename = report.photoUrl.replace(
-        '/uploads/',
-        '',
+      await this.cloudinaryService.deleteImage(
+        report.photoUrl,
       );
-
-      const filePath = join(
-        process.cwd(),
-        'uploads',
-        filename,
-      );
-
-      try {
-        await unlink(filePath);
-
-        console.log(
-          `Fotografía eliminada: ${filename}`,
-        );
-      } catch (error) {
-        console.error(
-          `No se pudo eliminar la fotografía ${filename}:`,
-          error,
-        );
-      }
     }
 
     return deletedReport;
