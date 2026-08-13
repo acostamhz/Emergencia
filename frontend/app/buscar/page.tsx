@@ -30,44 +30,135 @@ export default function BuscarPage() {
   const [locationFilter, setLocationFilter] =
     useState("Todas las zonas");
 
-  useEffect(() => {
-    async function loadReports() {
-      try {
+  // =====================================================
+  // CARGAR REPORTES
+  // =====================================================
+
+  async function loadReports(
+    showLoading = true,
+  ) {
+    try {
+      if (showLoading) {
         setLoading(true);
-        setFetchError("");
+      }
 
-        const response = await fetch(`${API_URL}/reports`);
+      setFetchError("");
 
-        if (!response.ok) {
-          throw new Error("No se pudieron obtener los reportes.");
-        }
+      const response = await fetch(
+        `${API_URL}/reports`,
+        {
+          cache: "no-store",
+        },
+      );
 
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-          throw new Error("La respuesta del servidor no es válida.");
-        }
-
-        setReports(data);
-      } catch (error) {
-        console.error("Error al obtener los reportes:", error);
-
-        setFetchError(
-          "No se pudieron cargar los reportes. Verifica que el servidor esté disponible.",
+      if (!response.ok) {
+        throw new Error(
+          "No se pudieron obtener los reportes.",
         );
-      } finally {
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error(
+          "La respuesta del servidor no es válida.",
+        );
+      }
+
+      setReports(data);
+    } catch (error) {
+      console.error(
+        "Error al obtener los reportes:",
+        error,
+      );
+
+      setFetchError(
+        "No se pudieron cargar los reportes. Verifica que el servidor esté disponible.",
+      );
+    } finally {
+      if (showLoading) {
         setLoading(false);
       }
     }
+  }
 
+  // =====================================================
+  // CARGA INICIAL
+  // =====================================================
+
+  useEffect(() => {
     loadReports();
   }, []);
+
+  // =====================================================
+  // ACTUALIZAR AL VOLVER A LA PÁGINA
+  // =====================================================
+
+  useEffect(() => {
+    const handleFocus = () => {
+      loadReports(false);
+    };
+
+    window.addEventListener(
+      "focus",
+      handleFocus,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "focus",
+        handleFocus,
+      );
+    };
+  }, []);
+
+  // =====================================================
+  // URL DE FOTOGRAFÍA
+  // =====================================================
+
+  function getPhotoUrl(
+    photoUrl?: string | null,
+  ) {
+    if (!photoUrl) {
+      return null;
+    }
+
+    /*
+     * Cloudinary devuelve una URL completa.
+     *
+     * Ejemplo:
+     * https://res.cloudinary.com/...
+     *
+     * En ese caso la usamos directamente.
+     */
+    if (
+      photoUrl.startsWith("http://") ||
+      photoUrl.startsWith("https://")
+    ) {
+      return photoUrl;
+    }
+
+    /*
+     * Compatibilidad con fotografías antiguas
+     * almacenadas localmente.
+     *
+     * Ejemplo:
+     * /uploads/fotografia.jpg
+     */
+    return `${API_URL}${photoUrl}`;
+  }
+
+  // =====================================================
+  // UBICACIONES
+  // =====================================================
 
   const locations = useMemo(() => {
     const uniqueLocations = Array.from(
       new Set(
         reports
-          .map((report) => report.location?.trim())
+          .map((report) =>
+            report.location?.trim(),
+          )
           .filter(Boolean),
       ),
     );
@@ -77,12 +168,20 @@ export default function BuscarPage() {
     );
   }, [reports]);
 
+  // =====================================================
+  // FILTRAR REPORTES
+  // =====================================================
+
   const filteredReports = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch =
+      search.trim().toLowerCase();
 
     return [...reports]
       .sort((a, b) => {
-        if (!a.createdAt && !b.createdAt) {
+        if (
+          !a.createdAt &&
+          !b.createdAt
+        ) {
           return b.id - a.id;
         }
 
@@ -100,17 +199,25 @@ export default function BuscarPage() {
         );
       })
       .filter((report) => {
-        const name = report.name?.toLowerCase() ?? "";
+        const name =
+          report.name?.toLowerCase() ?? "";
+
         const description =
-          report.description?.toLowerCase() ?? "";
+          report.description?.toLowerCase() ??
+          "";
+
         const location =
           report.location?.toLowerCase() ?? "";
 
         const matchesSearch =
           !normalizedSearch ||
           name.includes(normalizedSearch) ||
-          description.includes(normalizedSearch) ||
-          location.includes(normalizedSearch);
+          description.includes(
+            normalizedSearch,
+          ) ||
+          location.includes(
+            normalizedSearch,
+          );
 
         const matchesType =
           typeFilter === "Todos" ||
@@ -121,14 +228,19 @@ export default function BuscarPage() {
 
         const matchesStatus =
           statusFilter === "Todos" ||
-          (statusFilter === "Desaparecidos" &&
-            report.status === "desaparecido") ||
-          (statusFilter === "Encontrados" &&
+          (statusFilter ===
+            "Desaparecidos" &&
+            report.status ===
+              "desaparecido") ||
+          (statusFilter ===
+            "Encontrados" &&
             report.status === "encontrado");
 
         const matchesLocation =
-          locationFilter === "Todas las zonas" ||
-          report.location === locationFilter;
+          locationFilter ===
+            "Todas las zonas" ||
+          report.location ===
+            locationFilter;
 
         return (
           matchesSearch &&
@@ -145,18 +257,29 @@ export default function BuscarPage() {
     locationFilter,
   ]);
 
+  // =====================================================
+  // FILTROS ACTIVOS
+  // =====================================================
+
   const hasActiveFilters =
     search.trim() !== "" ||
     typeFilter !== "Todos" ||
     statusFilter !== "Todos" ||
-    locationFilter !== "Todas las zonas";
+    locationFilter !==
+      "Todas las zonas";
 
   function clearFilters() {
     setSearch("");
     setTypeFilter("Todos");
     setStatusFilter("Todos");
-    setLocationFilter("Todas las zonas");
+    setLocationFilter(
+      "Todas las zonas",
+    );
   }
+
+  // =====================================================
+  // ETIQUETA TIPO
+  // =====================================================
 
   function getTypeLabel(type: string) {
     switch (type) {
@@ -171,7 +294,13 @@ export default function BuscarPage() {
     }
   }
 
-  function getStatusLabel(status: string) {
+  // =====================================================
+  // ETIQUETA ESTADO
+  // =====================================================
+
+  function getStatusLabel(
+    status: string,
+  ) {
     switch (status) {
       case "desaparecido":
         return "Desaparecido";
@@ -184,20 +313,34 @@ export default function BuscarPage() {
     }
   }
 
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50">
       <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+
         {/* NAVEGACIÓN */}
+
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() =>
+            router.push("/")
+          }
           className="mb-8 inline-flex max-w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-900"
         >
-          <span className="shrink-0 text-lg">←</span>
-          <span>Volver al inicio</span>
+          <span className="shrink-0 text-lg">
+            ←
+          </span>
+
+          <span>
+            Volver al inicio
+          </span>
         </button>
 
         {/* ENCABEZADO */}
+
         <div className="mb-8 sm:mb-10">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-red-600">
             Cali Emergencia
@@ -208,21 +351,27 @@ export default function BuscarPage() {
           </h1>
 
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-700 sm:text-base">
-            Busca información sobre personas y mascotas
-            reportadas como desaparecidas o encontradas.
+            Busca información sobre personas
+            y mascotas reportadas como
+            desaparecidas o encontradas.
           </p>
         </div>
 
         {/* FILTROS */}
+
         <div className="mb-8 w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-10 sm:p-5">
           <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+
             {/* BÚSQUEDA */}
+
             <div className="min-w-0">
               <input
                 type="text"
                 value={search}
                 onChange={(event) =>
-                  setSearch(event.target.value)
+                  setSearch(
+                    event.target.value,
+                  )
                 }
                 placeholder="Nombre, descripción o ubicación..."
                 className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
@@ -230,61 +379,96 @@ export default function BuscarPage() {
             </div>
 
             {/* TIPO */}
+
             <div className="min-w-0">
               <select
                 value={typeFilter}
                 onChange={(event) =>
-                  setTypeFilter(event.target.value)
+                  setTypeFilter(
+                    event.target.value,
+                  )
                 }
                 className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
               >
-                <option>Todos</option>
-                <option>Personas</option>
-                <option>Mascotas</option>
+                <option>
+                  Todos
+                </option>
+
+                <option>
+                  Personas
+                </option>
+
+                <option>
+                  Mascotas
+                </option>
               </select>
             </div>
 
             {/* ESTADO */}
+
             <div className="min-w-0">
               <select
                 value={statusFilter}
                 onChange={(event) =>
-                  setStatusFilter(event.target.value)
+                  setStatusFilter(
+                    event.target.value,
+                  )
                 }
                 className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
               >
-                <option>Todos</option>
-                <option>Desaparecidos</option>
-                <option>Encontrados</option>
+                <option>
+                  Todos
+                </option>
+
+                <option>
+                  Desaparecidos
+                </option>
+
+                <option>
+                  Encontrados
+                </option>
               </select>
             </div>
 
             {/* ZONA */}
+
             <div className="min-w-0">
               <select
                 value={locationFilter}
                 onChange={(event) =>
-                  setLocationFilter(event.target.value)
+                  setLocationFilter(
+                    event.target.value,
+                  )
                 }
                 className="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
               >
-                <option>Todas las zonas</option>
+                <option>
+                  Todas las zonas
+                </option>
 
-                {locations.map((location) => (
-                  <option key={location} value={location}>
-                    {location}
-                  </option>
-                ))}
+                {locations.map(
+                  (location) => (
+                    <option
+                      key={location}
+                      value={location}
+                    >
+                      {location}
+                    </option>
+                  ),
+                )}
               </select>
             </div>
           </div>
 
           {/* LIMPIAR FILTROS */}
+
           {hasActiveFilters && (
             <div className="mt-4 flex justify-start sm:justify-end">
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={
+                  clearFilters
+                }
                 className="text-sm font-semibold text-red-600 transition hover:text-red-700"
               >
                 Limpiar filtros
@@ -294,6 +478,7 @@ export default function BuscarPage() {
         </div>
 
         {/* RESULTADOS */}
+
         <div className="mb-5 flex min-w-0 items-center justify-between gap-4 sm:mb-6">
           <h2 className="min-w-0 text-lg font-semibold text-slate-900">
             Reportes recientes
@@ -301,17 +486,20 @@ export default function BuscarPage() {
 
           <span className="shrink-0 text-sm font-medium text-slate-600">
             {filteredReports.length}{" "}
-            {filteredReports.length === 1
+            {filteredReports.length ===
+            1
               ? "reporte"
               : "reportes"}
           </span>
         </div>
 
         {/* ERROR */}
+
         {fetchError ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center sm:p-8">
             <p className="font-semibold text-red-800">
-              No se pudieron cargar los reportes.
+              No se pudieron cargar los
+              reportes.
             </p>
 
             <p className="mt-2 text-sm text-red-700">
@@ -320,21 +508,29 @@ export default function BuscarPage() {
 
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={() =>
+                window.location.reload()
+              }
               className="mt-5 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
             >
               Reintentar
             </button>
           </div>
         ) : loading ? (
+
           /* LOADING */
+
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center sm:p-10">
             <p className="text-slate-700">
               Cargando reportes...
             </p>
           </div>
-        ) : filteredReports.length === 0 ? (
+
+        ) : filteredReports.length ===
+          0 ? (
+
           /* SIN RESULTADOS */
+
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center sm:p-10">
             <p className="font-medium text-slate-900">
               No se encontraron reportes.
@@ -349,117 +545,154 @@ export default function BuscarPage() {
             {hasActiveFilters && (
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={
+                  clearFilters
+                }
                 className="mt-5 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
                 Limpiar filtros
               </button>
             )}
           </div>
+
         ) : (
+
           /* RESULTADOS */
+
           <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-            {filteredReports.map((report) => {
-              const isFound =
-                report.status === "encontrado";
+            {filteredReports.map(
+              (report) => {
+                const isFound =
+                  report.status ===
+                  "encontrado";
 
-              const imageUrl = report.photoUrl
-                ? `${API_URL}${report.photoUrl}`
-                : null;
+                /*
+                 * IMPORTANTE:
+                 *
+                 * Si photoUrl ya es una URL de
+                 * Cloudinary, se utiliza directamente.
+                 *
+                 * Si es una ruta antigua como
+                 * /uploads/foto.jpg, se antepone
+                 * API_URL.
+                 */
+                const imageUrl =
+                  getPhotoUrl(
+                    report.photoUrl,
+                  );
 
-              return (
-                <article
-                  key={report.id}
-                  className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                >
-                  {/* FOTO */}
-                  <div className="relative h-56 w-full shrink-0 overflow-hidden bg-slate-100">
-                    {imageUrl ? (
-                      <>
-                        {/* FONDO DE LA MISMA FOTO */}
-                        <img
-                          src={imageUrl}
-                          alt=""
-                          aria-hidden="true"
-                          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-25 blur-xl"
-                          loading="lazy"
-                          decoding="async"
-                        />
+                return (
+                  <article
+                    key={report.id}
+                    className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                  >
 
-                        {/* CAPA DE PROTECCIÓN */}
-                        <div className="absolute inset-0 bg-slate-900/5" />
+                    {/* FOTO */}
 
-                        {/* FOTO ORIGINAL COMPLETA */}
-                        <div className="relative z-10 flex h-full w-full items-center justify-center p-2">
+                    <div className="relative h-56 w-full shrink-0 overflow-hidden bg-slate-100">
+                      {imageUrl ? (
+                        <>
+                          {/* FONDO DE LA MISMA FOTO */}
+
                           <img
                             src={imageUrl}
-                            alt={`Fotografía de ${report.name}`}
-                            className="h-full w-full object-contain drop-shadow-md"
+                            alt=""
+                            aria-hidden="true"
+                            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-25 blur-xl"
                             loading="lazy"
                             decoding="async"
                           />
+
+                          {/* CAPA DE PROTECCIÓN */}
+
+                          <div className="absolute inset-0 bg-slate-900/5" />
+
+                          {/* FOTO ORIGINAL COMPLETA */}
+
+                          <div className="relative z-10 flex h-full w-full items-center justify-center p-2">
+                            <img
+                              src={imageUrl}
+                              alt={`Fotografía de ${report.name}`}
+                              className="h-full w-full object-contain drop-shadow-md"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <span className="px-4 text-center text-sm text-slate-500">
+                            Fotografía no
+                            disponible
+                          </span>
                         </div>
-                      </>
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <span className="px-4 text-center text-sm text-slate-500">
-                          Fotografía no disponible
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* INFORMACIÓN */}
-                  <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
-                    <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-                      {/* TIPO */}
-                      <span className="shrink-0 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                        {getTypeLabel(report.type)}
-                      </span>
-
-                      {/* ESTADO */}
-                      <span
-                        className={
-                          isFound
-                            ? "min-w-0 truncate text-right text-xs font-semibold text-green-600"
-                            : "min-w-0 truncate text-right text-xs font-semibold text-red-600"
-                        }
-                      >
-                        {getStatusLabel(report.status)}
-                      </span>
+                      )}
                     </div>
 
-                    <h3 className="break-words text-xl font-bold text-slate-900">
-                      {report.name}
-                    </h3>
+                    {/* INFORMACIÓN */}
 
-                    <p className="mt-1 break-words text-sm font-medium text-slate-600">
-                      {report.age !== undefined &&
-                        `${report.age} años · `}
-                      {report.location}
-                    </p>
+                    <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
+                      <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
 
-                    {report.description && (
-                      <p className="mt-3 line-clamp-2 break-words text-sm text-slate-600">
-                        {report.description}
+                        {/* TIPO */}
+
+                        <span className="shrink-0 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                          {getTypeLabel(
+                            report.type,
+                          )}
+                        </span>
+
+                        {/* ESTADO */}
+
+                        <span
+                          className={
+                            isFound
+                              ? "min-w-0 truncate text-right text-xs font-semibold text-green-600"
+                              : "min-w-0 truncate text-right text-xs font-semibold text-red-600"
+                          }
+                        >
+                          {getStatusLabel(
+                            report.status,
+                          )}
+                        </span>
+                      </div>
+
+                      <h3 className="break-words text-xl font-bold text-slate-900">
+                        {report.name}
+                      </h3>
+
+                      <p className="mt-1 break-words text-sm font-medium text-slate-600">
+                        {report.age !==
+                          undefined &&
+                          `${report.age} años · `}
+
+                        {report.location}
                       </p>
-                    )}
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        router.push(
-                          `/reporte/${report.id}`,
-                        )
-                      }
-                      className="mt-auto w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                    >
-                      Ver información
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+                      {report.description && (
+                        <p className="mt-3 line-clamp-2 break-words text-sm text-slate-600">
+                          {
+                            report.description
+                          }
+                        </p>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(
+                            `/reporte/${report.id}`,
+                          )
+                        }
+                        className="mt-auto w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                      >
+                        Ver información
+                      </button>
+                    </div>
+                  </article>
+                );
+              },
+            )}
           </div>
         )}
       </div>
