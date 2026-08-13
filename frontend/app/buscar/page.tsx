@@ -363,25 +363,49 @@ export default function BuscarPage() {
               const isFound =
                 report.status === "encontrado";
 
+              const imageUrl = report.photoUrl
+                ? `${API_URL}${report.photoUrl}`
+                : null;
+
               return (
                 <article
                   key={report.id}
                   className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >
                   {/* FOTO */}
-                  <div className="flex h-56 w-full shrink-0 items-center justify-center overflow-hidden bg-slate-100">
-                    {report.photoUrl ? (
-                      <img
-                        src={`${API_URL}${report.photoUrl}`}
-                        alt={`Fotografía de ${report.name}`}
-                        className="max-h-full max-w-full object-contain"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                  <div className="relative h-56 w-full shrink-0 overflow-hidden bg-slate-100">
+                    {imageUrl ? (
+                      <>
+                        {/* FONDO DE LA MISMA FOTO */}
+                        <img
+                          src={imageUrl}
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-25 blur-xl"
+                          loading="lazy"
+                          decoding="async"
+                        />
+
+                        {/* CAPA DE PROTECCIÓN */}
+                        <div className="absolute inset-0 bg-slate-900/5" />
+
+                        {/* FOTO ORIGINAL COMPLETA */}
+                        <div className="relative z-10 flex h-full w-full items-center justify-center p-2">
+                          <img
+                            src={imageUrl}
+                            alt={`Fotografía de ${report.name}`}
+                            className="h-full w-full object-contain drop-shadow-md"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                      </>
                     ) : (
-                      <span className="px-4 text-center text-sm text-slate-500">
-                        Fotografía no disponible
-                      </span>
+                      <div className="flex h-full w-full items-center justify-center">
+                        <span className="px-4 text-center text-sm text-slate-500">
+                          Fotografía no disponible
+                        </span>
+                      </div>
                     )}
                   </div>
 
