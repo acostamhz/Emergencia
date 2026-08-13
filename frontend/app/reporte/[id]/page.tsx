@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Report = {
@@ -152,7 +153,9 @@ export default function ReportePage() {
       setEditing(false);
     } catch (error) {
       console.error(error);
-      setError("No se pudo actualizar el reporte. Intenta nuevamente.");
+      setError(
+        "No se pudo actualizar el reporte. Intenta nuevamente.",
+      );
     } finally {
       setUpdating(false);
     }
@@ -217,7 +220,9 @@ export default function ReportePage() {
       router.push("/buscar");
     } catch (error) {
       console.error(error);
-      setError("No se pudo eliminar el reporte. Intenta nuevamente.");
+      setError(
+        "No se pudo eliminar el reporte. Intenta nuevamente.",
+      );
       setDeleting(false);
       setConfirmDelete(false);
     }
@@ -225,7 +230,7 @@ export default function ReportePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-12">
+      <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-slate-700">Cargando reporte...</p>
         </div>
@@ -235,11 +240,12 @@ export default function ReportePage() {
 
   if (error && !report) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-12">
+      <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-2xl">
           <button
+            type="button"
             onClick={() => router.push("/buscar")}
-            className="mb-6 font-semibold text-slate-700 hover:text-slate-900"
+            className="mb-6 font-semibold text-slate-700 transition hover:text-slate-900"
           >
             ← Volver a buscar
           </button>
@@ -255,40 +261,47 @@ export default function ReportePage() {
   if (!report) return null;
 
   const photoUrl = report.photoUrl
-  ? `${API_URL}${report.photoUrl}`
-  : null;
+    ? `${API_URL}${report.photoUrl}`
+    : null;
 
   const isFound = report.status === "encontrado";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-2xl">
+        {/* NAVEGACIÓN */}
         <button
+          type="button"
           onClick={() => router.push("/buscar")}
-          className="mb-6 font-semibold text-slate-700 transition hover:text-slate-900"
+          className="mb-6 inline-flex items-center font-semibold text-slate-700 transition hover:text-slate-900"
         >
           ← Volver a buscar
         </button>
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex h-80 items-center justify-center overflow-hidden bg-slate-200">
+          {/* FOTO */}
+          <div className="flex h-72 w-full items-center justify-center overflow-hidden bg-slate-100 sm:h-96">
             {photoUrl ? (
               <img
                 src={photoUrl}
                 alt={`Fotografía de ${report.name}`}
-                className="h-full w-full object-cover"
+                className="max-h-full max-w-full object-contain"
+                loading="eager"
+                decoding="async"
               />
             ) : (
-              <span className="text-slate-500">
+              <span className="px-4 text-center text-slate-500">
                 Fotografía no disponible
               </span>
             )}
           </div>
 
-          <div className="p-6">
-            <div className="mb-5 flex items-center justify-between gap-4">
+          {/* INFORMACIÓN */}
+          <div className="p-5 sm:p-6">
+            <div className="mb-5 flex min-w-0 items-center justify-between gap-3">
+              {/* TIPO */}
               <span
-                className={`rounded-full px-3 py-1 text-sm font-bold capitalize ${
+                className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold capitalize ${
                   report.type === "mascota"
                     ? "bg-blue-100 text-blue-700"
                     : "bg-red-100 text-red-700"
@@ -297,9 +310,12 @@ export default function ReportePage() {
                 {report.type}
               </span>
 
+              {/* ESTADO */}
               <span
-                className={`font-semibold capitalize ${
-                  isFound ? "text-green-600" : "text-red-600"
+                className={`min-w-0 truncate text-right font-semibold capitalize ${
+                  isFound
+                    ? "text-green-600"
+                    : "text-red-600"
                 }`}
               >
                 {report.status}
@@ -308,6 +324,7 @@ export default function ReportePage() {
 
             {editing ? (
               <div className="space-y-5">
+                {/* NOMBRE */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">
                     Nombre
@@ -316,11 +333,14 @@ export default function ReportePage() {
                   <input
                     type="text"
                     value={name}
-                    onChange={(event) => setName(event.target.value)}
+                    onChange={(event) =>
+                      setName(event.target.value)
+                    }
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
                   />
                 </div>
 
+                {/* EDAD */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">
                     Edad
@@ -330,11 +350,14 @@ export default function ReportePage() {
                     type="number"
                     min="0"
                     value={age}
-                    onChange={(event) => setAge(event.target.value)}
+                    onChange={(event) =>
+                      setAge(event.target.value)
+                    }
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
                   />
                 </div>
 
+                {/* UBICACIÓN */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">
                     Última ubicación conocida
@@ -343,11 +366,14 @@ export default function ReportePage() {
                   <input
                     type="text"
                     value={location}
-                    onChange={(event) => setLocation(event.target.value)}
+                    onChange={(event) =>
+                      setLocation(event.target.value)
+                    }
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
                   />
                 </div>
 
+                {/* DESCRIPCIÓN */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">
                     Descripción
@@ -363,14 +389,17 @@ export default function ReportePage() {
                   />
                 </div>
 
+                {/* ERROR */}
                 {error && (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
                     {error}
                   </div>
                 )}
 
-                <div className="flex gap-3">
+                {/* ACCIONES DE EDICIÓN */}
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <button
+                    type="button"
                     onClick={cancelEditing}
                     disabled={updating}
                     className="flex-1 rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
@@ -379,20 +408,25 @@ export default function ReportePage() {
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleUpdate}
                     disabled={updating}
                     className="flex-1 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
                   >
-                    {updating ? "Guardando..." : "Guardar cambios"}
+                    {updating
+                      ? "Guardando..."
+                      : "Guardar cambios"}
                   </button>
                 </div>
               </div>
             ) : (
               <>
-                <h1 className="text-3xl font-bold text-slate-900">
+                {/* TÍTULO */}
+                <h1 className="break-words text-3xl font-bold text-slate-900">
                   {report.name}
                 </h1>
 
+                {/* DATOS */}
                 <div className="mt-3 space-y-2 text-slate-600">
                   {report.age !== undefined && (
                     <p>
@@ -400,30 +434,33 @@ export default function ReportePage() {
                     </p>
                   )}
 
-                  <p>
+                  <p className="break-words">
                     <strong>Última ubicación:</strong>{" "}
                     {report.location}
                   </p>
                 </div>
 
+                {/* DESCRIPCIÓN */}
                 {report.description && (
                   <div className="mt-6">
                     <h2 className="mb-2 text-lg font-bold text-slate-900">
                       Descripción
                     </h2>
 
-                    <p className="leading-7 text-slate-600">
+                    <p className="break-words leading-7 text-slate-600">
                       {report.description}
                     </p>
                   </div>
                 )}
 
+                {/* ERROR */}
                 {error && (
                   <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
                     {error}
                   </div>
                 )}
 
+                {/* CONFIRMACIÓN ELIMINAR */}
                 {confirmDelete ? (
                   <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-5">
                     <p className="font-semibold text-red-900">
@@ -434,9 +471,12 @@ export default function ReportePage() {
                       Esta acción eliminará el reporte permanentemente.
                     </p>
 
-                    <div className="mt-4 flex gap-3">
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                       <button
-                        onClick={() => setConfirmDelete(false)}
+                        type="button"
+                        onClick={() =>
+                          setConfirmDelete(false)
+                        }
                         disabled={deleting}
                         className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                       >
@@ -444,28 +484,35 @@ export default function ReportePage() {
                       </button>
 
                       <button
+                        type="button"
                         onClick={handleDelete}
                         disabled={deleting}
                         className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-bold text-white transition hover:bg-red-700 disabled:opacity-50"
                       >
-                        {deleting ? "Eliminando..." : "Sí, eliminar"}
+                        {deleting
+                          ? "Eliminando..."
+                          : "Sí, eliminar"}
                       </button>
                     </div>
                   </div>
                 ) : confirmFound ? (
+                  /* CONFIRMACIÓN ENCONTRADO */
                   <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5">
                     <p className="font-semibold text-green-900">
                       ¿Marcar este reporte como encontrado?
                     </p>
 
                     <p className="mt-1 text-sm text-green-700">
-                      El estado del reporte cambiará de desaparecido a
-                      encontrado.
+                      El estado del reporte cambiará de
+                      desaparecido a encontrado.
                     </p>
 
-                    <div className="mt-4 flex gap-3">
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                       <button
-                        onClick={() => setConfirmFound(false)}
+                        type="button"
+                        onClick={() =>
+                          setConfirmFound(false)
+                        }
                         disabled={updating}
                         className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                       >
@@ -473,6 +520,7 @@ export default function ReportePage() {
                       </button>
 
                       <button
+                        type="button"
                         onClick={handleMarkAsFound}
                         disabled={updating}
                         className="flex-1 rounded-xl bg-green-600 px-4 py-3 font-bold text-white transition hover:bg-green-700 disabled:opacity-50"
@@ -484,8 +532,10 @@ export default function ReportePage() {
                     </div>
                   </div>
                 ) : (
+                  /* ACCIONES */
                   <div className="mt-6 space-y-3 border-t border-slate-200 pt-6">
                     <button
+                      type="button"
                       onClick={startEditing}
                       className="w-full rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50"
                     >
@@ -494,7 +544,10 @@ export default function ReportePage() {
 
                     {!isFound && (
                       <button
-                        onClick={() => setConfirmFound(true)}
+                        type="button"
+                        onClick={() =>
+                          setConfirmFound(true)
+                        }
                         className="w-full rounded-xl bg-green-600 px-5 py-3 font-bold text-white transition hover:bg-green-700"
                       >
                         Marcar como encontrado
@@ -502,7 +555,10 @@ export default function ReportePage() {
                     )}
 
                     <button
-                      onClick={() => setConfirmDelete(true)}
+                      type="button"
+                      onClick={() =>
+                        setConfirmDelete(true)
+                      }
                       className="w-full rounded-xl border border-red-200 px-5 py-3 font-semibold text-red-600 transition hover:bg-red-50"
                     >
                       Eliminar reporte
@@ -510,6 +566,7 @@ export default function ReportePage() {
                   </div>
                 )}
 
+                {/* MENSAJE ENCONTRADO */}
                 {isFound && (
                   <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-4 text-center">
                     <p className="font-semibold text-green-700">
@@ -520,6 +577,7 @@ export default function ReportePage() {
               </>
             )}
 
+            {/* ID */}
             <div className="mt-6 border-t border-slate-200 pt-4 text-sm text-slate-500">
               Reporte #{report.id}
             </div>

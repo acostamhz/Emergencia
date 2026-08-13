@@ -366,25 +366,27 @@ export default function BuscarPage() {
               return (
                 <article
                   key={report.id}
-                  className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                  className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >
                   {/* FOTO */}
-                  <div className="flex h-56 w-full items-center justify-center overflow-hidden bg-slate-200">
+                  <div className="flex h-56 w-full shrink-0 items-center justify-center overflow-hidden bg-slate-100">
                     {report.photoUrl ? (
                       <img
                         src={`${API_URL}${report.photoUrl}`}
                         alt={`Fotografía de ${report.name}`}
-                        className="h-full w-full object-cover"
+                        className="max-h-full max-w-full object-contain"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
-                      <span className="px-4 text-center text-sm text-slate-600">
+                      <span className="px-4 text-center text-sm text-slate-500">
                         Fotografía no disponible
                       </span>
                     )}
                   </div>
 
                   {/* INFORMACIÓN */}
-                  <div className="min-w-0 p-4 sm:p-5">
+                  <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
                     <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
                       {/* TIPO */}
                       <span className="shrink-0 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
@@ -426,7 +428,7 @@ export default function BuscarPage() {
                           `/reporte/${report.id}`,
                         )
                       }
-                      className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                      className="mt-auto w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
                       Ver información
                     </button>
